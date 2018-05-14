@@ -4,3 +4,4 @@
 stacks/*
 !stacks/staging.*
 !stacks/production.*
+environment.sh
