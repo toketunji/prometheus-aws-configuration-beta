@@ -1,7 +1,10 @@
 .terraform/
 *.tfst*
 
+<<<<<<< HEAD
 stacks/*
 !stacks/staging.*
 !stacks/production.*
+=======
+>>>>>>> 5ae0973... First commit
 environment.sh

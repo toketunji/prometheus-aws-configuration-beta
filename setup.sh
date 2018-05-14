@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 TERRAFORM_BUCKET=${TERRAFORM_BUCKET}
 TERRAFORMPATH=$(which terraform)
 TERRAFORMBACKVARS=$(pwd)/stacks/test.backend
