@@ -28,26 +28,5 @@
         "awslogs-stream-prefix": "prometheus"
       }
     }
-  },
-  {
-    "name": "s3-config-grabber",
-    "image": "mesosphere/aws-cli",
-    "memory": 256,
-    "essential": false,
-    "mountPoints": [
-      {
-        "sourceVolume": "config-from-s3",
-        "containerPath": "/configs"
-      }
-    ],
-    "command": ["s3", "sync", "s3://${config_bucket}/etc/prometheus", "/configs/prometheus"],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "${log_group}",
-        "awslogs-region": "${region}",
-        "awslogs-stream-prefix": "prometheus"
-      }
-    }
   }
 ]

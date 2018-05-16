@@ -133,6 +133,7 @@ data "template_file" "s3_configurator" {
   }
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 resource "aws_ecs_task_definition" "s3_configurator" {
@@ -203,3 +204,5 @@ resource "aws_s3_bucket_object" "prometheus-config" {
   etag   = "${md5(file("config/prometheus.yml"))}"
 }
 >>>>>>> 75f3a5a... Remove the task role from the container
+=======
+>>>>>>> 4b536df... Removed promtheus puppet from user data script. Removed a number of files from

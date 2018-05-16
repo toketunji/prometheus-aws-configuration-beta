@@ -50,7 +50,7 @@ clean() {
 
         if [ -d "$TERRAFORMPROJ$1/.terraform" ] ; then
                 rm -rf $TERRAFORMPROJ$1/.terraform
-                echo "It worked" 
+                echo "Finsished cleaning" 
         else
                 echo "$1 .terraform not found"
         fi
