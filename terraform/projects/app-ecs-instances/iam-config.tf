@@ -49,7 +49,10 @@ data "aws_iam_policy_document" "ecs_instance_document" {
       "s3:GetObject",
       "s3:DeleteObject",
       "s3:ListBucket",
+<<<<<<< HEAD
       "ecr:GetDownloadUrlForLayer",
+=======
+>>>>>>> 76e39dd... Removed promtheus puppet from user data script. Removed a number of files from
       "ecr:BatchGetImage",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
