@@ -49,6 +49,7 @@ data "aws_iam_policy_document" "ecs_instance_document" {
       "s3:GetObject",
       "s3:DeleteObject",
       "s3:ListBucket",
+      "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
