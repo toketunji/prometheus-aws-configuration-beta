@@ -50,6 +50,10 @@ data "aws_iam_policy_document" "ecs_instance_document" {
       "s3:DeleteObject",
       "s3:ListBucket",
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+      "s3:ListObjects",
+>>>>>>> 1254f5b... updated instance permission & fixed path in the promtheus config json.
       "ecr:GetDownloadUrlForLayer",
 =======
 >>>>>>> 76e39dd... Removed promtheus puppet from user data script. Removed a number of files from

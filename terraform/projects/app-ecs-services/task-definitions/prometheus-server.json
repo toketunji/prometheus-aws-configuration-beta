@@ -2,7 +2,8 @@
   {
     "name": "prometheus",
     "image": "prom/prometheus",
-    "memoryReservation": 4096,
+    "cpu": 1024,
+    "memory": 2048,
     "essential": true,
     "portMappings": [
       {
@@ -13,11 +14,7 @@
     "mountPoints": [
       {
         "sourceVolume": "prometheus-config",
-        "containerPath": "/etc/prometheus/prometheus.yml"
-      },
-      {
-        "sourceVolume": "alert-config",
-        "containerPath": "/etc/prometheus/alerts"
+        "containerPath": "/etc/prometheus/"
       }
     ],
     "logConfiguration": {
