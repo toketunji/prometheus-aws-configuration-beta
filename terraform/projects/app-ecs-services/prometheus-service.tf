@@ -203,6 +203,102 @@ resource "aws_s3_bucket_object" "prometheus-config" {
   source = "config/prometheus.yml"
   etag   = "${md5(file("config/prometheus.yml"))}"
 }
+<<<<<<< HEAD
 >>>>>>> 75f3a5a... Remove the task role from the container
 =======
 >>>>>>> 4b536df... Removed promtheus puppet from user data script. Removed a number of files from
+=======
+<<<<<<< HEAD
+=======
+
+resource "aws_ecs_task_definition" "s3_configurator" {
+  family                = "${var.stack_name}-s3configurator"
+  container_definitions = "${data.template_file.s3_configurator.rendered}"
+  task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
+
+  volume {
+    name      = "config-from-s3"
+    host_path = "/srv/gds/"
+  }
+}
+
+resource "aws_ecs_task_definition" "s3_targets" {
+  family                = "${var.stack_name}-s3targets"
+  container_definitions = "${data.template_file.s3_targets.rendered}"
+  # container permissions need to be worked out
+  # task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
+
+  volume {
+    name      = "config-from-s3"
+    host_path = "/srv/gds/"
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "s3-updater" {
+  name        = "${var.stack_name}-s3-watch"
+  description = "Capture each AWS Console Sign In"
+
+  event_pattern = <<PATTERN
+{
+  "source": [
+    "aws.s3"
+  ],
+  "detail-type": [
+    "AWS API Call via CloudTrail"
+  ],
+  "detail": {
+    "eventSource": [
+      "s3.amazonaws.com"
+    ],
+    "eventName": [
+      "ListObjects",
+      "ListObjectVersions",
+      "PutObject",
+      "GetObject",
+      "HeadObject",
+      "CopyObject",
+      "GetObjectAcl",
+      "PutObjectAcl",
+      "CreateMultipartUpload",
+      "ListParts",
+      "UploadPart",
+      "CompleteMultipartUpload",
+      "AbortMultipartUpload",
+      "UploadPartCopy",
+      "RestoreObject",
+      "DeleteObject",
+      "DeleteObjects",
+      "GetObjectTorrent",
+      "SelectObjectContent"
+    ],
+    "requestParameters": {
+      "bucketName": [
+        "${aws_s3_bucket.config_bucket.id}"
+      ]
+    }
+  }
+}
+PATTERN
+}
+
+resource "aws_ecs_service" "s3-targets-svc" {
+  name            = "${var.stack_name}-s3-targets-svc"
+  cluster         = "${var.stack_name}-ecs-monitoring"
+  task_definition = "${aws_ecs_task_definition.s3_targets.arn}"
+  desired_count   = 1
+}
+
+resource "aws_cloudwatch_event_target" "s3-updater-event" {
+  target_id = "s3_updater_evnt"
+  rule      = "${aws_cloudwatch_event_rule.s3-updater.name}"
+  arn       = "${data.terraform_remote_state.app_ecs_instances.cluster_arn}"
+
+  role_arn = "${aws_iam_role.prometheus_task_iam_role.arn}"
+
+  ecs_target {
+    task_definition_arn = "${aws_ecs_task_definition.s3_configurator.arn}"
+    task_count          = 1
+  }
+}
+>>>>>>> 75f3a5a... Remove the task role from the container
+>>>>>>> 1921b84... Added task role section including the policy document.
