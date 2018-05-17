@@ -1,15 +1,15 @@
 #!/bin/zsh
 TERRAFORM_BUCKET=${TERRAFORM_BUCKET}
 TERRAFORMPATH=$(which terraform)
-TERRAFORMBACKVARS=$(pwd)/stacks/test.backend
-TERRAFORMTFVARS=$(pwd)/stacks/test.tfvars
+TERRAFORMBACKVARS=$(pwd)/stacks/${ENV}.backend
+TERRAFORMTFVARS=$(pwd)/stacks/${ENV}.tfvars
 ROOTPROJ=$(pwd)
 TERRAFORMPROJ=$(pwd)/terraform/projects/
 USE_AWS_VAULT=${USE_AWS_VAULT}
 declare -a COMPONENTS=("infra-networking" "infra-security-groups" "app-ecs-instances" "app-ecs-albs" "app-ecs-services")
 
 
-#Buckert name and stackname
+#Bucket name and stackname
 ############ Actions #################
 
 create_stack_configs() {
@@ -50,7 +50,7 @@ clean() {
 
         if [ -d "$TERRAFORMPROJ$1/.terraform" ] ; then
                 rm -rf $TERRAFORMPROJ$1/.terraform
-                echo "Finsished cleaning" 
+                echo "Finished cleaning $1" 
         else
                 echo "$1 .terraform not found"
         fi
@@ -59,68 +59,51 @@ clean() {
 init () {
         echo $1
 
-        if [ -d "$TERRAFORMPROJ$1" ] ; then
-                cd $TERRAFORMPROJ$1
-                if [ "${USE_AWS_VAULT}" = 'true' ] ; then
-                        aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH init -backend-config=$TERRAFORMBACKVARS
-                else
-                        $TERRAFORMPATH init -backend-config=$TERRAFORMBACKVARS
-                fi
+        cd $TERRAFORMPROJ$1
+        if [ "${USE_AWS_VAULT}" = 'true' ] ; then
+                aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH init -backend-config=$TERRAFORMBACKVARS
         else
-                echo "Terraform did not work as expected"
+                $TERRAFORMPATH init -backend-config=$TERRAFORMBACKVARS
         fi
 }
 
 plan () {
         echo $1
-        # check that the AWS thing exists before running the plan for particular
+        # check that the AWS thing exists before running the plan
 
-        if [ -d "$TERRAFORMPROJ$1" ] ; then
-                cd $TERRAFORMPROJ$1
-                if [ "${USE_AWS_VAULT}" = 'true' ] ; then
-                        aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH plan --var-file=$TERRAFORMTFVARS
-                else 
-                        $TERRAFORMPATH plan --var-file=$TERRAFORMTFVARS
-                fi
-        else
-                echo "Terraform did not work as expected"
+        cd $TERRAFORMPROJ$1
+        if [ "${USE_AWS_VAULT}" = 'true' ] ; then
+                aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH plan --var-file=$TERRAFORMTFVARS
+        else 
+                $TERRAFORMPATH plan --var-file=$TERRAFORMTFVARS
         fi
 }
 
 apply () {
         echo $1
 
-        if [ -d "$TERRAFORMPROJ$1" ] ; then
-                cd $TERRAFORMPROJ$1
-                if [ "${USE_AWS_VAULT}" = 'true' ] ; then
-                        aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH apply --var-file=$TERRAFORMTFVARS --auto-approve
-                else
-                        $TERRAFORMPATH apply --var-file=$TERRAFORMTFVARS --auto-approve
-                fi
+        cd $TERRAFORMPROJ$1
+        if [ "${USE_AWS_VAULT}" = 'true' ] ; then
+                aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH apply --var-file=$TERRAFORMTFVARS --auto-approve
         else
-                echo "Terraform did not work as expected"
+                $TERRAFORMPATH apply --var-file=$TERRAFORMTFVARS --auto-approve
         fi
-
 }
 
 destroy () {
         echo $1
 
-        if [ -d "$TERRAFORMPROJ$1" ] ; then
-                cd $TERRAFORMPROJ$1
-                if [ "${USE_AWS_VAULT}" = 'true' ] ; then
-                        aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH destroy --var-file=$TERRAFORMTFVARS
-                else
-                        $TERRAFORMPATH destroy --var-file=$TERRAFORMTFVARS
-                fi
+        cd $TERRAFORMPROJ$1
+        if [ "${USE_AWS_VAULT}" = 'true' ] ; then
+                aws-vault exec ${PROFILE_NAME} -- $TERRAFORMPATH destroy --var-file=$TERRAFORMTFVARS
         else
-                echo "Terraform did not work as expected"
+                $TERRAFORMPATH destroy --var-file=$TERRAFORMTFVARS
         fi
 }
 
 #################################
 #################################
-if [ ${USE_AWS_VAULT} = "true" ] ; then
+if [ "${USE_AWS_VAULT}" = "true" ] ; then
   if [ -z "${PROFILE_NAME}" ] ; then
     echo "Please set your PROFILE_NAME environment variable";
   fi
