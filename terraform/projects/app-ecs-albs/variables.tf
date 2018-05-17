@@ -1,9 +1,8 @@
-/**
-* ## Project: app-ecs-services
-*
-* Create services and task definitions for the ECS cluster
-*
-*/
+variable "additional_tags" {
+  type        = "map"
+  description = "Stack specific tags to apply"
+  default     = {}
+}
 
 variable "aws_region" {
   type        = "string"
@@ -23,6 +22,16 @@ variable "stack_name" {
   default     = "ecs-monitoring"
 }
 
+# locals
+# --------------------------------------------------------------
+
+locals {
+  default_tags = {
+    Terraform = "true"
+    Project   = "app-ecs-albs"
+  }
+}
+
 # Resources
 # --------------------------------------------------------------
 
@@ -32,17 +41,13 @@ terraform {
   required_version = "= 0.11.7"
 
   backend "s3" {
-    key = "app-ecs-services.tfstate"
+    key = "app-ecs-albs.tfstate"
   }
 }
 
 provider "aws" {
   version = "~> 1.14.1"
   region  = "${var.aws_region}"
-}
-
-provider "template" {
-  version = "~> 1.0.0"
 }
 
 ## Data sources
@@ -67,31 +72,9 @@ data "terraform_remote_state" "infra_security_groups" {
   }
 }
 
-data "terraform_remote_state" "app_ecs_albs" {
-  backend = "s3"
-
-  config {
-    bucket = "${var.remote_state_bucket}"
-    key    = "app-ecs-albs.tfstate"
-    region = "${var.aws_region}"
-  }
-}
-
-## Resources
-
-resource "aws_cloudwatch_log_group" "task_logs" {
-  name              = "${var.stack_name}"
-  retention_in_days = 7
-}
-
-resource "aws_s3_bucket" "config_bucket" {
-  bucket_prefix = "${var.stack_name}-config"
-  acl           = "private"
-
-  versioning {
-    enabled = true
-  }
-}
-
 ## Outputs
 
+output "monitoring_external_tg" {
+  value       = "${aws_lb_target_group.monitoring_external_tg.arn}"
+  description = "External Monitoring ALB target group"
+}

@@ -1,14 +1,13 @@
-/**
-* ## Project: app-ecs-services
-*
-* Create services and task definitions for the ECS cluster
-*
-*/
-
 variable "aws_region" {
   type        = "string"
   description = "AWS region"
   default     = "eu-west-1"
+}
+
+variable "prometheus_targets_bucket" {
+  type        = "string"
+  description = "The bucket used to grab targets from SD config"
+  default     = "gds-prometheus-targets"
 }
 
 variable "remote_state_bucket" {
@@ -57,16 +56,6 @@ data "terraform_remote_state" "infra_networking" {
   }
 }
 
-data "terraform_remote_state" "infra_security_groups" {
-  backend = "s3"
-
-  config {
-    bucket = "${var.remote_state_bucket}"
-    key    = "infra-security-groups.tfstate"
-    region = "${var.aws_region}"
-  }
-}
-
 data "terraform_remote_state" "app_ecs_albs" {
   backend = "s3"
 
@@ -77,21 +66,15 @@ data "terraform_remote_state" "app_ecs_albs" {
   }
 }
 
-## Resources
+data "terraform_remote_state" "app_ecs_instances" {
+  backend = "s3"
 
-resource "aws_cloudwatch_log_group" "task_logs" {
-  name              = "${var.stack_name}"
-  retention_in_days = 7
-}
-
-resource "aws_s3_bucket" "config_bucket" {
-  bucket_prefix = "${var.stack_name}-config"
-  acl           = "private"
-
-  versioning {
-    enabled = true
+  config {
+    bucket = "${var.remote_state_bucket}"
+    key    = "app-ecs-instances.tfstate"
+    region = "${var.aws_region}"
   }
 }
 
-## Outputs
+## Outputs 
 

@@ -7,6 +7,7 @@
 *
 */
 
+<<<<<<< HEAD
 ## IAM roles & policies
 
 resource "aws_iam_role" "prometheus_task_iam_role" {
@@ -64,7 +65,14 @@ resource "aws_iam_role_policy_attachment" "prometheus_policy_attachment" {
 }
 
 ### container, task, service definitions
+=======
+### container, task, service definitions ###
 
+########### Prometheus ECS service #############
+# ----------------------------------------------
+>>>>>>> 49d3b32... Made changes to repo and added the ability to deploy service that have targets that are auto generated.
+
+##### Task defintion #####
 data "template_file" "prometheus_container_defn" {
   template = "${file("task-definitions/prometheus-server.json")}"
 
@@ -96,8 +104,9 @@ resource "aws_ecs_task_definition" "prometheus_server" {
   }
 }
 
+##### Service defintion #####
 resource "aws_ecs_service" "prometheus_server" {
-  name            = "${var.stack_name}-prometheus-server"
+  name            = "${var.stack_name}-prometheus"
   cluster         = "${var.stack_name}-ecs-monitoring"
   task_definition = "${aws_ecs_task_definition.prometheus_server.arn}"
   desired_count   = 1
@@ -109,11 +118,19 @@ resource "aws_ecs_service" "prometheus_server" {
   }
 }
 
-resource "aws_s3_bucket_object" "prometheus-config" {
-  bucket = "${aws_s3_bucket.config_bucket.id}"
-  key    = "etc/prometheus/prometheus.yml"
-  source = "config/prometheus.yml"
-  etag   = "${md5(file("config/prometheus.yml"))}"
+########### Configurator ECS service ############
+#----------------------------------------------
+
+##### Task defintion #####
+
+data "template_file" "s3_configurator" {
+  template = "${file("task-definitions/configurator.json")}"
+
+  vars {
+    log_group     = "${aws_cloudwatch_log_group.task_logs.name}"
+    region        = "${var.aws_region}"
+    config_bucket = "${aws_s3_bucket.config_bucket.id}"
+  }
 }
 <<<<<<< HEAD
 =======
@@ -129,9 +146,35 @@ resource "aws_ecs_task_definition" "s3_configurator" {
   }
 }
 
+##### Service defintion #####
+
+resource "aws_ecs_service" "s3-config-svc" {
+  name            = "${var.stack_name}-s3-config-svc"
+  cluster         = "${var.stack_name}-ecs-monitoring"
+  task_definition = "${aws_ecs_task_definition.s3_configurator.arn}"
+  desired_count   = 1
+}
+
+########### Targets ECS service #############
+#--------------------------------------------
+
+##### Task defintion #####
+
+data "template_file" "s3_targets" {
+  template = "${file("task-definitions/targets.json")}"
+
+  vars {
+    log_group      = "${aws_cloudwatch_log_group.task_logs.name}"
+    region         = "${var.aws_region}"
+    config_bucket  = "${aws_s3_bucket.config_bucket.id}"
+    targets_bucket = "${var.prometheus_targets_bucket}"
+  }
+}
+
 resource "aws_ecs_task_definition" "s3_targets" {
   family                = "${var.stack_name}-s3targets"
   container_definitions = "${data.template_file.s3_targets.rendered}"
+
   # container permissions need to be worked out
   # task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
 
@@ -141,52 +184,7 @@ resource "aws_ecs_task_definition" "s3_targets" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "s3-updater" {
-  name        = "${var.stack_name}-s3-watch"
-  description = "Capture each AWS Console Sign In"
-
-  event_pattern = <<PATTERN
-{
-  "source": [
-    "aws.s3"
-  ],
-  "detail-type": [
-    "AWS API Call via CloudTrail"
-  ],
-  "detail": {
-    "eventSource": [
-      "s3.amazonaws.com"
-    ],
-    "eventName": [
-      "ListObjects",
-      "ListObjectVersions",
-      "PutObject",
-      "GetObject",
-      "HeadObject",
-      "CopyObject",
-      "GetObjectAcl",
-      "PutObjectAcl",
-      "CreateMultipartUpload",
-      "ListParts",
-      "UploadPart",
-      "CompleteMultipartUpload",
-      "AbortMultipartUpload",
-      "UploadPartCopy",
-      "RestoreObject",
-      "DeleteObject",
-      "DeleteObjects",
-      "GetObjectTorrent",
-      "SelectObjectContent"
-    ],
-    "requestParameters": {
-      "bucketName": [
-        "${aws_s3_bucket.config_bucket.id}"
-      ]
-    }
-  }
-}
-PATTERN
-}
+##### Service defintion #####
 
 resource "aws_ecs_service" "s3-targets-svc" {
   name            = "${var.stack_name}-s3-targets-svc"
@@ -195,16 +193,13 @@ resource "aws_ecs_service" "s3-targets-svc" {
   desired_count   = 1
 }
 
-resource "aws_cloudwatch_event_target" "s3-updater-event" {
-  target_id = "s3_updater_evnt"
-  rule      = "${aws_cloudwatch_event_rule.s3-updater.name}"
-  arn       = "${data.terraform_remote_state.app_ecs_instances.cluster_arn}"
+##### Config uploader ####
 
-  role_arn = "${aws_iam_role.prometheus_task_iam_role.arn}"
-
-  ecs_target {
-    task_definition_arn = "${aws_ecs_task_definition.s3_configurator.arn}"
-    task_count          = 1
-  }
+#look at for uplaoding folder via aws cli & local exec
+resource "aws_s3_bucket_object" "prometheus-config" {
+  bucket = "${aws_s3_bucket.config_bucket.id}"
+  key    = "etc/prometheus/prometheus.yml"
+  source = "config/prometheus.yml"
+  etag   = "${md5(file("config/prometheus.yml"))}"
 }
 >>>>>>> 75f3a5a... Remove the task role from the container

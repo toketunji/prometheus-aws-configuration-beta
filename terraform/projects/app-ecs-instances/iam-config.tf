@@ -1,3 +1,6 @@
+## In this file we create a profile for our instance to work nicely with ECS & s3 components
+## 
+
 resource "aws_iam_instance_profile" "ecs_profile" {
   name = "${var.stack_name}-ecs-profile"
   role = "${aws_iam_role.instance_iam_role.name}"
