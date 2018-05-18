@@ -22,6 +22,7 @@ bucket = "${TERRAFORM_BUCKET}"
 region = "eu-west-1"
 encrypt = true
 EOF
+echo "stacks/${ENV}.backend created"
 fi
 
 if [ -e "${ROOTPROJ}/stacks/${ENV}.tfvars" ] ; then
@@ -34,6 +35,7 @@ additional_tags = {
   "Environment" = "${ENV}"
 }
 EOF
+echo "stacks/${ENV}.tfvars created"
 fi
 
 }
