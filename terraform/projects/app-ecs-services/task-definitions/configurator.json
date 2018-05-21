@@ -1,0 +1,24 @@
+[
+  {
+    "name": "s3-configurator",
+    "image": "mesosphere/aws-cli",
+    "cpu": 40,
+    "memory": 256,
+    "essential": true,
+    "mountPoints": [
+      {
+        "sourceVolume": "config-from-s3",
+        "containerPath": "/configs"
+      }
+    ],
+    "command": ["s3", "sync", "s3://${config_bucket}/etc/prometheus", "/configs/prometheus"],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "s3-config"
+      }
+    }
+  }
+]

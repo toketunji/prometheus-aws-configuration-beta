@@ -17,6 +17,12 @@ variable "remote_state_bucket" {
   default     = "ecs-monitoring"
 }
 
+variable "prometheus_targets_bucket" {
+  type        = "string"
+  description = "The bucket to extract targets from"
+  default     = "gds-prometheus-targets-staging"
+}
+
 variable "stack_name" {
   type        = "string"
   description = "Unique name for this collection of resources"
