@@ -30,17 +30,17 @@ resource "aws_ecs_task_definition" "prometheus_server" {
 
   volume {
     name      = "config-from-s3"
-    host_path = "/ecs/config-from-s3"
+    host_path = "/srv/gds"
   }
 
   volume {
     name      = "prometheus-config"
-    host_path = "/ecs/config-from-s3/prometheus/prometheus.yml"
+    host_path = "/srv/gds/prometheus"
   }
 
   volume {
     name      = "alert-config"
-    host_path = "/ecs/config-from-s3/prometheus/alerts"
+    host_path = "/srv/gds/prometheus/alerts"
   }
 }
 
@@ -76,7 +76,8 @@ data "template_file" "s3_configurator" {
 resource "aws_ecs_task_definition" "s3_configurator" {
   family                = "${var.stack_name}-s3configurator"
   container_definitions = "${data.template_file.s3_configurator.rendered}"
-  task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
+
+  #task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
 
   volume {
     name      = "config-from-s3"
@@ -133,6 +134,12 @@ resource "aws_ecs_service" "s3-targets-svc" {
 
 ##### Config uploader ####
 
+resource "aws_s3_bucket_object" "prometheus-config" {
+  bucket = "${aws_s3_bucket.config_bucket.id}"
+  key    = "config/prometheus/prometheus.yml"
+  source = "config/prometheus/prometheus.yml"
+  etag   = "${md5(file("config/prometheus/prometheus.yml"))}"
+}
 
 #look at for uplaoding folder via aws cli & local exec
 

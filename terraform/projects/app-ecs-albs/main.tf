@@ -110,7 +110,7 @@ resource "aws_lb" "monitoring_external_alb" {
 #containers on our culster
 resource "aws_lb_target_group" "monitoring_external_tg" {
   name     = "${var.stack_name}-ext-tg"
-  port     = 80
+  port     = 9090
   protocol = "HTTP"
   vpc_id   = "${data.terraform_remote_state.infra_networking.vpc_id}"
 

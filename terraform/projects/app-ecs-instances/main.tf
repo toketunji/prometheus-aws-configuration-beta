@@ -56,7 +56,7 @@ variable "ecs_instance_root_size" {
 variable "ecs_instance_ssh_keyname" {
   type        = "string"
   description = "SSH keyname for ECS container instances"
-  default     = "ecs-monitoring-ssh-test"
+  default     = "djeche-insecure"
 }
 
 variable "remote_state_bucket" {
@@ -176,4 +176,27 @@ module "ecs_instance" {
   max_size                  = "${var.autoscaling_group_max_size}"
   desired_capacity          = "${var.autoscaling_group_desired_capacity}"
   wait_for_capacity_timeout = 0
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_instance" "jump_box" {
+  ami           = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${element(data.terraform_remote_state.infra_networking.public_subnets, 0)}"
+  key_name      = "${var.ecs_instance_ssh_keyname}"
 }
