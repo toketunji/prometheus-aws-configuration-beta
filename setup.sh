@@ -7,6 +7,7 @@ ROOTPROJ=$(pwd)
 TERRAFORMPROJ=$(pwd)/terraform/projects/
 USE_AWS_VAULT=${USE_AWS_VAULT}
 declare -a COMPONENTS=("infra-networking" "infra-security-groups" "app-ecs-instances" "app-ecs-albs" "app-ecs-services")
+declare -a COMPONENTSDESTROY=("app-ecs-services" "app-ecs-albs" "app-ecs-instances" "infra-security-groups" "infra-networking")
 
 
 #Bucket name and stackname
@@ -152,7 +153,7 @@ case "$1" in
         cd ${ROOTPROJ}
     ;;
 -d) echo "Destroy terraform plan to enviroment :"
-        for folder in $COMPONENTS
+        for folder in $COMPONENTSDESTROY
         do
           destroy $folder
         done
