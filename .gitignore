@@ -3,6 +3,7 @@
 *.tfst*
 
 # terraform env vars
+.idea*
 stacks/*
 !stacks/staging.*
 !stacks/production.*
