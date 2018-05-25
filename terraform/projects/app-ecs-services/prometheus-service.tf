@@ -50,6 +50,7 @@ data "aws_iam_policy_document" "prometheus_policy_doc" {
       "s3:List*",
     ]
   }
+
 }
 
 resource "aws_iam_policy" "prometheus_task_policy" {

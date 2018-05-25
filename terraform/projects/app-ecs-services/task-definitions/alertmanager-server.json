@@ -7,7 +7,8 @@
     "essential": true,
     "portMappings": [
       {
-        "containerPort": 9093
+        "containerPort": 9093,
+        "hostPort": 9093
       }
     ],
     "command": [

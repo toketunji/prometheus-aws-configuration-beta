@@ -40,6 +40,7 @@ data "aws_iam_policy_document" "ecs_instance_document" {
       "ecs:RegisterContainerInstance",
       "ecs:StartTelemetrySession",
       "ecs:Submit*",
+      "ec2:Describe*",
       "ecr:GetAuthorizationToken",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
