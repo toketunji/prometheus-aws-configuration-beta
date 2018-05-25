@@ -77,6 +77,16 @@ resource "aws_iam_role_policy_attachment" "prometheus_policy_attachment" {
   policy_arn = "${aws_iam_policy.prometheus_task_policy.arn}"
 }
 
+
+data "template_file" "prometheus_config_file" {
+  template = "${file("templates/prometheus.tpl")}"
+
+  vars {
+    alertmanager_dns_name = "${data.terraform_remote_state.app_ecs_albs.alb_dns_name}"
+  }
+}
+
+
 ### container, task, service definitions
 
 data "template_file" "prometheus_container_defn" {
@@ -134,26 +144,27 @@ resource "aws_ecs_service" "prometheus_server" {
   }
 }
 
-resource "aws_ecs_service" "targets_grabber" {
+resource "aws_ecs_service" "config_updater" {
   name            = "${var.stack_name}-targets-grabber"
   cluster         = "${var.stack_name}-ecs-monitoring"
-  task_definition = "${aws_ecs_task_definition.targets_grabber.arn}"
+  task_definition = "${aws_ecs_task_definition.config_updater.arn}"
   desired_count   = 1
 }
 
-data "template_file" "targets_container_defn" {
-  template = "${file("task-definitions/targets_grabber.json")}"
+data "template_file" "config_updater_defn" {
+  template = "${file("task-definitions/config_updater.json")}"
 
   vars {
     log_group      = "${aws_cloudwatch_log_group.task_logs.name}"
     region         = "${var.aws_region}"
     targets_bucket = "${var.targets_s3_bucket}"
+    config_bucket  = "${aws_s3_bucket.config_bucket.id}"
   }
 }
 
-resource "aws_ecs_task_definition" "targets_grabber" {
-  family                = "${var.stack_name}-targets"
-  container_definitions = "${data.template_file.targets_container_defn.rendered}"
+resource "aws_ecs_task_definition" "config_updater" {
+  family                = "${var.stack_name}-config-updater"
+  container_definitions = "${data.template_file.config_updater_defn.rendered}"
   task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
 
   volume {
@@ -163,10 +174,10 @@ resource "aws_ecs_task_definition" "targets_grabber" {
 }
 
 resource "aws_s3_bucket_object" "prometheus-config" {
-  bucket = "${aws_s3_bucket.config_bucket.id}"
-  key    = "prometheus/prometheus/prometheus.yml"
-  source = "config/prometheus.yml"
-  etag   = "${md5(file("config/prometheus.yml"))}"
+  bucket  = "${aws_s3_bucket.config_bucket.id}"
+  key     = "prometheus/prometheus/prometheus.yml"
+  content = "${data.template_file.prometheus_config_file.rendered}"
+  etag    = "${md5(data.template_file.prometheus_config_file.rendered)}"
 }
 
 #### nginx reverse proxy

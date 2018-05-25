@@ -7,8 +7,7 @@
     "essential": true,
     "portMappings": [
       {
-        "containerPort": 9093,
-        "hostPort": 9093
+        "containerPort": 9093
       }
     ],
     "command": [
@@ -47,7 +46,7 @@
       "options": {
         "awslogs-group": "${log_group}",
         "awslogs-region": "${region}",
-        "awslogs-stream-prefix": "alertmanager"
+        "awslogs-stream-prefix": "alertmanager-config"
       }
     }
   }

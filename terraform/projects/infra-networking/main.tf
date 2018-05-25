@@ -101,3 +101,13 @@ output "public_subnets" {
   value       = "${module.vpc.public_subnets}"
   description = "List of public subnet IDs"
 }
+
+output "private_subnets_ips" {
+  value       = "${module.vpc.private_subnets_cidr_blocks}"
+  description = "List of public subnet IDs"
+}
+
+output "public_subnets_ips" {
+  value       = "${module.vpc.public_subnets_cidr_blocks}"
+  description = "List of public subnet IDs"
+}

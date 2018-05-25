@@ -56,7 +56,7 @@ variable "ecs_instance_root_size" {
 variable "ecs_instance_ssh_keyname" {
   type        = "string"
   description = "SSH keyname for ECS container instances"
-  default     = "ecs-monitoring-ssh-test"
+  default     = "djeche-insecure"
 }
 
 variable "remote_state_bucket" {
@@ -190,7 +190,7 @@ resource "aws_ebs_volume" "prometheus_ebs_volume" {
   type              = "gp2"
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 
   tags = "${merge(

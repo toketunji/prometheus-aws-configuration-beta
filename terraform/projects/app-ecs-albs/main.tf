@@ -130,10 +130,30 @@ resource "aws_lb_listener" "monitoring_external_listener" {
   }
 }
 
+resource "aws_lb" "alertmanager_external_alb" {
+  name               = "${var.stack_name}-alertmanager"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = ["${data.terraform_remote_state.infra_security_groups.monitoring_external_sg_id}"]
+
+  subnets = [
+    "${element(data.terraform_remote_state.infra_networking.public_subnets, 0)}",
+    "${element(data.terraform_remote_state.infra_networking.public_subnets, 1)}",
+    "${element(data.terraform_remote_state.infra_networking.public_subnets, 2)}",
+  ]
+
+  tags = "${merge(
+    local.default_tags,
+    var.additional_tags,
+    map("Stackname", "${var.stack_name}"),
+    map("Name", "${var.stack_name}-ecs-monitoring")
+  )}"
+}
+
 
 resource "aws_lb_listener" "alertmanager_listener" {
-  load_balancer_arn = "${aws_lb.monitoring_external_alb.arn}"
-  port              = "8080"
+  load_balancer_arn = "${aws_lb.alertmanager_external_alb.arn}"
+  port              = "80"
   protocol          = "HTTP"
 
   default_action {
@@ -171,5 +191,11 @@ output "monitoring_external_tg" {
 
 output "alertmanager_external_tg" {
   value       = "${aws_lb_target_group.alertmanager_endpoint.arn}"
+  description = "External Alertmanager ALB target group"
+}
+
+
+output "alb_dns_name" {
+  value       = "${aws_lb.alertmanager_external_alb.dns_name}"
   description = "External Alertmanager ALB target group"
 }
