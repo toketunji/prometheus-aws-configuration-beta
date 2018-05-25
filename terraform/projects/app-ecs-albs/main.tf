@@ -130,6 +130,7 @@ resource "aws_lb_listener" "monitoring_external_listener" {
   }
 }
 
+<<<<<<< HEAD
 resource "aws_lb" "alertmanager_external_alb" {
   name               = "${var.stack_name}-alertmanager"
   internal           = false
@@ -192,10 +193,13 @@ output "monitoring_external_tg" {
 output "alertmanager_external_tg" {
   value       = "${aws_lb_target_group.alertmanager_endpoint.arn}"
   description = "External Alertmanager ALB target group"
+<<<<<<< HEAD
 }
 
 
 output "alb_dns_name" {
   value       = "${aws_lb.alertmanager_external_alb.dns_name}"
   description = "External Alertmanager ALB target group"
+=======
+>>>>>>> 5bc323c6e4a3640f3757263b23c82c566392986d
 }

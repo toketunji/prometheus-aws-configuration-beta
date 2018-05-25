@@ -2,7 +2,11 @@
 .terraform/
 *.tfst*
 
+<<<<<<< HEAD
 # terraform env vars
+=======
+
+>>>>>>> 5bc323c6e4a3640f3757263b23c82c566392986d
 .idea*
 stacks/*
 !stacks/staging.*
