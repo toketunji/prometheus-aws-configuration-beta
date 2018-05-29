@@ -23,6 +23,13 @@ variable "targets_s3_bucket" {
   default     = "gds-prometheus-targets"
 }
 
+variable "dns_zone_id" {
+  type        = "string"
+  description = "The default DNS zone Id"
+  default     = "Z3RWC8AB0UB9QM"
+}
+
+
 variable "stack_name" {
   type        = "string"
   description = "Unique name for this collection of resources"

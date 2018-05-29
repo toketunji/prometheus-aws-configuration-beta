@@ -52,6 +52,16 @@ data "aws_iam_policy_document" "alertmanager_policy_doc" {
   }
 }
 
+#I need to refactor to ensure comppatability with other domains=
+resource "aws_route53_record" "alertmanager_dns" {
+  zone_id = "${var.dns_zone_id}"
+  name    = "alert.${var.stack_name}.gds-reliability.engineering"
+  type    = "CNAME"
+  ttl     = "3600"
+  records = ["${data.terraform_remote_state.app_ecs_albs.alertmanager_alb_dns}"]
+}
+
+
 resource "aws_iam_policy" "alertmanager_task_policy" {
   name   = "${var.stack_name}-alertmanager-task-policy"
   path   = "/"

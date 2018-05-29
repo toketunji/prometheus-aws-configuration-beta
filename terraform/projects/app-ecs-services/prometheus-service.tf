@@ -66,6 +66,16 @@ data "aws_iam_policy_document" "prometheus_policy_doc" {
   }
 }
 
+
+resource "aws_route53_record" "prometheus_dns" {
+  zone_id = "${var.dns_zone_id}"
+  name    = "metrics.${var.stack_name}.gds-reliability.engineering"
+  type    = "CNAME"
+  ttl     = "3600"
+  records = ["${data.terraform_remote_state.app_ecs_albs.prometheus_alb_dns}"]
+}
+
+
 resource "aws_iam_policy" "prometheus_task_policy" {
   name   = "${var.stack_name}-prometheus-task-policy"
   path   = "/"
@@ -82,7 +92,7 @@ data "template_file" "prometheus_config_file" {
   template = "${file("templates/prometheus.tpl")}"
 
   vars {
-    alertmanager_dns_name = "${data.terraform_remote_state.app_ecs_albs.alb_dns_name}"
+    alertmanager_dns_name = "${aws_route53_record.alertmanager_dns.name}"
   }
 }
 
@@ -175,7 +185,7 @@ resource "aws_ecs_task_definition" "config_updater" {
 
 resource "aws_s3_bucket_object" "prometheus-config" {
   bucket  = "${aws_s3_bucket.config_bucket.id}"
-  key     = "prometheus/prometheus/prometheus.yml"
+  key     = "prometheus/prometheus.yml"
   content = "${data.template_file.prometheus_config_file.rendered}"
   etag    = "${md5(data.template_file.prometheus_config_file.rendered)}"
 }

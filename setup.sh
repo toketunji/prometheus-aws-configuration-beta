@@ -34,6 +34,8 @@ stack_name = "${ENV}"
 additional_tags = {
   "Environment" = "${ENV}"
 }
+
+dns_zone_id = "${DNS_ZONE_ID}"
 EOF
 echo "stacks/${ENV}.tfvars created"
 fi

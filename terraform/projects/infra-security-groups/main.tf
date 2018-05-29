@@ -128,9 +128,8 @@ resource "aws_security_group_rule" "monitoring_external_sg_egress_any_any" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = ["0.0.0.0/0","${var.cidr_admin_whitelist}"]
   security_group_id = "${aws_security_group.monitoring_external_sg.id}"
-  cidr_blocks       = "${var.cidr_admin_whitelist}"
 }
 
 ### Internal SG
@@ -159,24 +158,6 @@ resource "aws_security_group_rule" "monitoring_internal_sg_ingress_alb_http" {
 }
 
 
-
-resource "aws_security_group" "internal_network_communication" {
-  name        = "${var.stack_name}-internal-comms"
-  vpc_id      = "${data.terraform_remote_state.infra_networking.vpc_id}"
-  description = "Controls access instances between subnets"
-
-}
-
-resource "aws_security_group_rule" "internal_ssh_allow_all" {
-  type      = "ingress"
-  from_port = 22
-  to_port   = 22
-  protocol  = "tcp"
-  security_group_id        = "${aws_security_group.internal_network_communication.id}"
-  cidr_blocks = ["${data.terraform_remote_state.infra_networking.public_subnets_ips}","${data.terraform_remote_state.infra_networking.private_subnets_ips}"]
-}
-
-
 resource "aws_security_group_rule" "monitoring_internal_sg_egress_any_any" {
   type              = "egress"
   from_port         = 0
@@ -198,7 +179,3 @@ output "monitoring_internal_sg_id" {
   description = "monitoring_internal_sg ID"
 }
 
-output "internal_network_sg" {
-  value       = "${aws_security_group.internal_network_communication.id}"
-  description = "monitoring_internal_sg ID"
-}
