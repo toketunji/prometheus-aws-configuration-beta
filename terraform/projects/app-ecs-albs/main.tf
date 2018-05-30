@@ -134,7 +134,7 @@ resource "aws_lb" "alertmanager_external_alb" {
   name               = "${var.stack_name}-alertmanager"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = ["${data.terraform_remote_state.infra_security_groups.monitoring_external_sg_id}"]
+  security_groups    = ["${data.terraform_remote_state.infra_security_groups.aletmanager_external_sg_id}"]
 
   subnets = [
     "${element(data.terraform_remote_state.infra_networking.public_subnets, 0)}",
@@ -203,5 +203,17 @@ output "alertmanager_alb_dns" {
 
 output "prometheus_alb_dns" {
   value       = "${aws_lb.monitoring_external_alb.dns_name}"
+  description = "External Alertmanager ALB target group"
+}
+
+
+output "alertmanager_alb_zoneid" {
+  value       = "${aws_lb.alertmanager_external_alb.zone_id}"
+  description = "External Alertmanager ALB target group"
+}
+
+
+output "prometheus_alb_zoneid" {
+  value       = "${aws_lb.monitoring_external_alb.zone_id}"
   description = "External Alertmanager ALB target group"
 }

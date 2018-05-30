@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "prometheus_policy_doc" {
   statement {
     sid = "GetPrometheusFiles"
 
-    resources = ["arn:aws:s3:::${aws_s3_bucket.config_bucket.id}/prometheus/*"]
+    resources = ["arn:aws:s3:::${aws_s3_bucket.config_bucket.id}/prometheus/*","arn:aws:s3:::${aws_s3_bucket.config_bucket.id}/alertmanager/*"]
 
     actions = [
       "s3:Get*",
@@ -71,8 +71,9 @@ resource "aws_route53_record" "prometheus_dns" {
   zone_id = "${var.dns_zone_id}"
   name    = "metrics.${var.stack_name}.gds-reliability.engineering"
   type    = "CNAME"
-  ttl     = "3600"
-  records = ["${data.terraform_remote_state.app_ecs_albs.prometheus_alb_dns}"]
+  ttl     = "300"
+  records = ["${data.terraform_remote_state.app_ecs_albs.alertmanager_alb_dns}"]
+
 }
 
 
@@ -121,7 +122,7 @@ resource "aws_ecs_task_definition" "prometheus_server" {
 
   volume {
     name      = "prometheus-config"
-    host_path = "/ecs/config-from-s3/prometheus"
+    host_path = "/ecs/config-from-s3"
   }
 
   volume {
@@ -188,6 +189,13 @@ resource "aws_s3_bucket_object" "prometheus-config" {
   key     = "prometheus/prometheus.yml"
   content = "${data.template_file.prometheus_config_file.rendered}"
   etag    = "${md5(data.template_file.prometheus_config_file.rendered)}"
+}
+
+resource "aws_s3_bucket_object" "alerts-config" {
+  bucket  = "${aws_s3_bucket.config_bucket.id}"
+  key     = "prometheus/alerts/alerts.yml"
+  source = "config/alerts.yml"
+  etag    = "${md5(file("config/alerts.yml"))}"
 }
 
 #### nginx reverse proxy

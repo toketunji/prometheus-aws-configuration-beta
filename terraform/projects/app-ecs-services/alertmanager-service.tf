@@ -54,11 +54,12 @@ data "aws_iam_policy_document" "alertmanager_policy_doc" {
 
 #I need to refactor to ensure comppatability with other domains=
 resource "aws_route53_record" "alertmanager_dns" {
-  zone_id = "${var.dns_zone_id}"
-  name    = "alert.${var.stack_name}.gds-reliability.engineering"
-  type    = "CNAME"
-  ttl     = "3600"
-  records = ["${data.terraform_remote_state.app_ecs_albs.alertmanager_alb_dns}"]
+    zone_id = "${var.dns_zone_id}"
+    name    = "alerts.${var.stack_name}.gds-reliability.engineering"
+    type    = "CNAME"
+    ttl     = "300"
+    records = ["${data.terraform_remote_state.app_ecs_albs.alertmanager_alb_dns}"]
+
 }
 
 
