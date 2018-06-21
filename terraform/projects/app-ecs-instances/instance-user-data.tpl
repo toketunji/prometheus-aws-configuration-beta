@@ -1,7 +1,7 @@
 #!/bin/bash
 # Attach EBS volume to instance
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] installing dependencies for volume attaching"
-sudo yum install -y aws-cli wget
+sudo yum install -y aws-cli wget jq
 
 REGION="${region}"
 DEVICE="xvdf"
@@ -17,7 +17,29 @@ VOLUME_ID="$(aws ec2 describe-volumes --filters Name=availability-zone,Values=$A
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] attaching volume: $VOLUME_ID"
 aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device /dev/$DEVICE --region $REGION
 
+
+DISK_STATUS=$(aws ec2 describe-volume-status --volume-ids $VOLUME_ID --region $REGION | jq '.VolumeStatuses[0].VolumeStatus.Status')
+
+
+#I need to
+#I need to add support for all other possible outcomes
+count=0
+while [[ $DISK_STATUS != "ok" ]];
+do
+  echo "Waiting for disk status to become OK";
+  sleep 10;
+  # after a specified number of tries the instance should shutdown
+  if [[ count -gt 10 ]];
+  then
+    shutdown -h now;
+    break;
+  fi
+  DISK_STATUS=$(aws ec2 describe-volume-status --volume-ids $VOLUME_ID --region $REGION | jq '.VolumeStatuses[0].VolumeStatus.Status')
+  count=$((count+1))
+done
+
 # Waiting for volume to finish attaching
+#I do not know why this does not work on the instance
 x=0
 while [[ $x -lt 15 ]]; do
   if ! [[ -e /dev/$DEVICE ]] ; then
@@ -35,7 +57,6 @@ if file -s /dev/$DEVICE | grep -q "/dev/$DEVICE: data"; then
 else
   echo "[$(date '+%H:%M:%S %d-%m-%Y')] attach-volume: /dev/$DEVICE is already formatted: $(file -s /dev/$DEVICE)"
 fi
-
 
 #Mount volume to be used by prometheus container
 mkdir -p /ecs/prometheus_data

@@ -58,6 +58,7 @@ data "aws_iam_policy_document" "ecs_instance_document" {
     actions = [
       "ec2:AttachVolume",
       "ec2:DetachVolume",
+      "ec2:DescribeVolumeStatus"
     ]
   }
 

@@ -20,7 +20,7 @@ variable "aws_region" {
 variable "prometheis_total" {
   type        = "string"
   description = "Desired number of prometheus servers.  Maximum 3."
-  default     = "3"
+  default     = "2"
 }
 
 variable "ecs_image_id" {
@@ -176,6 +176,7 @@ module "ecs_instance" {
     map("Stackname", "${var.stack_name}"),
     map("Name", "${var.stack_name}-ecs-instance")
   )}"
+
 }
 
 resource "aws_ebs_volume" "prometheus_ebs_volume" {
