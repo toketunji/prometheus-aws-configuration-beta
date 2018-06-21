@@ -1,6 +1,7 @@
 #!/bin/bash
 # Attach EBS volume to instance
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] installing dependencies for volume attaching"
+sudo yum install -y aws-cli wget
 
 REGION="${region}"
 DEVICE="xvdf"
@@ -60,8 +61,6 @@ fi
 #Mount volume to be used by prometheus container
 mkdir -p /ecs/prometheus_data
 mount /dev/"$DEVICE" /ecs/prometheus_data
-
-
 
 #Create prometheus group and allow it to read and write to our volume for storing prometheus data. Note, 65534 is
 #chosen as the UID to be added to the prometheus group as this is the UID that prometheus in the docker container runs as.
