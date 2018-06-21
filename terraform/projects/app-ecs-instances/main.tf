@@ -176,10 +176,11 @@ module "ecs_instance" {
     map("Stackname", "${var.stack_name}"),
     map("Name", "${var.stack_name}-ecs-instance")
   )}"
+
 }
 
 resource "aws_ebs_volume" "prometheus_ebs_volume" {
-  count = "${length(data.aws_subnet.subnets_for_prometheus.*.availability_zone)}"
+  count = "3"
 
   availability_zone = "${element(data.aws_subnet.subnets_for_prometheus.*.availability_zone, count.index)}"
   size              = 500

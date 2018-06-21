@@ -128,7 +128,7 @@ resource "aws_acm_certificate" "monitoring_cert" {
 
 resource "aws_route53_record" "monitoring_cert_validation" {
   # Count matches the domain_name plus each `subject_alternative_domain`
-  count = "${1 + length(concat(aws_route53_record.prom_alias.*.fqdn, aws_route53_record.alerts_alias.*.fqdn))}"
+  count = "${1 + (2 * length(data.terraform_remote_state.infra_networking.public_subnets))}"
 
   name       = "${lookup(aws_acm_certificate.monitoring_cert.domain_validation_options[count.index], "resource_record_name")}"
   type       = "${lookup(aws_acm_certificate.monitoring_cert.domain_validation_options[count.index], "resource_record_type")}"
