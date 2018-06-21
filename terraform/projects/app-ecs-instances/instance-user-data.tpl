@@ -18,9 +18,10 @@ until [ "$DISK_AVAILABILITY" = available ]; do
     if [[ $count -le 10 ]]
     then
         sleep 10;
-        echo "Sleeping: waiting for volume to become available"
+        echo "Sleeping for some time"
         count=$((count+1));
-        DISK_AVAILABILITY=$(aws ec2 describe-volumes --region "$REGION" --filters Name=volume-id,Values="$VOLUME_ID" | jq -r '.Volumes[0].State')
+        echo "In while loop"
+        DISK_AVAILABILITY=$(aws ec2 describe-volumes --region "$REGION" --filters Name=volume-id,Values="$VOLUME_ID" --query Volumes[0].State --output text)
     else
         break
     fi
@@ -37,6 +38,7 @@ case $DISK_AVAILABILITY in
 esac
 
 # Waiting for volume to finish attaching
+#I do not know why this does not work on the instance
 x=0
 while [[ $x -lt 15 ]]; do
   if ! [[ -e /dev/$DEVICE ]] ; then
