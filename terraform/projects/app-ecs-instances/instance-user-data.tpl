@@ -15,26 +15,29 @@ AZ="$(wget -q -O - http://169.254.169.254/latest/meta-data/placement/availabilit
 VOLUME_ID="$(aws ec2 describe-volumes --filters Name=availability-zone,Values=$AZ --volume-ids $VOLUME_IDS --region $REGION --query Volumes[*].VolumeId --output text)"
 
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] attaching volume: $VOLUME_ID"
-aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device /dev/$DEVICE --region $REGION
+aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device /dev/$DEVICE --region $REGION;
 
 
-DISK_STATUS=$(aws ec2 describe-volume-status --volume-ids $VOLUME_ID --region $REGION | jq '.VolumeStatuses[0].VolumeStatus.Status')
+DISK_STATUS=$(aws ec2 describe-volumes --volume-ids $VOLUME_ID --region $REGION | jq -r '.Volumes[0].Attachments[0].State');
 
-
-#I need to
 #I need to add support for all other possible outcomes
 count=0
-while [[ $DISK_STATUS != "ok" ]];
-do
-  echo "Waiting for disk status to become OK";
+while true; do
+  echo "Waiting for disk status to become OK: " $DISK_STATUS;
   sleep 10;
-  # after a specified number of tries the instance should shutdown
-  if [[ count -gt 10 ]];
-  then
-    shutdown -h now;
-    break;
-  fi
-  DISK_STATUS=$(aws ec2 describe-volume-status --volume-ids $VOLUME_ID --region $REGION | jq '.VolumeStatuses[0].VolumeStatus.Status')
+  case $DISK_STATUS in # after a specified number of tries the instance should shutdown
+            "attached")
+                break
+             ;;
+            *)
+              if [[ count -gt 5 ]]; then
+                shutdown -h now;
+                break;
+              fi
+             ;;
+  esac
+  DISK_STATUS=$(aws ec2 describe-volumes --volume-ids $VOLUME_ID --region $REGION | jq -r '.Volumes[0].Attachments[0].State');
+  echo $DISK_STATUS
   count=$((count+1))
 done
 
