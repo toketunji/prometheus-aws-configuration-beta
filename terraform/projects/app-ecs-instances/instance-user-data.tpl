@@ -6,6 +6,7 @@ sudo yum install -y aws-cli wget jq
 REGION="${region}"
 DEVICE="xvdf"
 VOLUME_IDS="${volume_ids}"
+DISKTIMEOUT=10
 
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] finding current instance ID"
 INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`"
@@ -14,11 +15,19 @@ echo "[$(date '+%H:%M:%S %d-%m-%Y')] finding volume to attach"
 AZ="$(wget -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone)"
 VOLUME_ID="$(aws ec2 describe-volumes --filters Name=availability-zone,Values=$AZ --volume-ids $VOLUME_IDS --region $REGION --query Volumes[*].VolumeId --output text)"
 
-echo "[$(date '+%H:%M:%S %d-%m-%Y')] attaching volume: $VOLUME_ID"
-aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device /dev/$DEVICE --region $REGION;
+VOLUME_ATTACHED="$(aws ec2 describe-volumes --region eu-west-1 --filters Name=volume-id,Values=$VOLUME_ID | jq -r '.Volumes[0].Attachments[0].State')"
 
 
-DISK_STATUS=$(aws ec2 describe-volumes --volume-ids $VOLUME_ID --region $REGION | jq -r '.Volumes[0].Attachments[0].State');
+if [ $VOLUME_ATTACHED -e "attached" ]; then
+    echo "[$(date '+%H:%M:%S %d-%m-%Y')] attaching volume: $VOLUME_ID"
+    aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device /dev/$DEVICE --region $REGION;
+    else
+    #https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
+    # We need to check state and either attach the disk or not, do something magical like shutodwn if no state or somehting more smart
+
+
+
+DISK_STATUS=$(aws ec2 describe-volumes --region eu-west-1 --filters Name=volume-id,Values=$VOLUME_ID | jq -r '.Volumes[0].Attachments[0].State');
 
 #I need to add support for all other possible outcomes
 count=0
@@ -30,7 +39,7 @@ while true; do
                 break
              ;;
             *)
-              if [[ count -gt 5 ]]; then
+              if [[ count -gt $DISKTIMEOUT ]]; then
                 shutdown -h now;
                 break;
               fi

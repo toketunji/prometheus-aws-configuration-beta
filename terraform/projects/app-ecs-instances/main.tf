@@ -20,7 +20,7 @@ variable "aws_region" {
 variable "prometheis_total" {
   type        = "string"
   description = "Desired number of prometheus servers.  Maximum 3."
-  default     = "2"
+  default     = "3"
 }
 
 variable "ecs_image_id" {
@@ -180,7 +180,7 @@ module "ecs_instance" {
 }
 
 resource "aws_ebs_volume" "prometheus_ebs_volume" {
-  count = "${length(data.aws_subnet.subnets_for_prometheus.*.availability_zone)}"
+  count = "3"
 
   availability_zone = "${element(data.aws_subnet.subnets_for_prometheus.*.availability_zone, count.index)}"
   size              = 500
