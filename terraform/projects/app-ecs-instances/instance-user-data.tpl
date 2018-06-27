@@ -1,7 +1,7 @@
 #!/bin/bash
 # Attach EBS volume to instance
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] installing dependencies for volume attaching"
-sudo yum install -y aws-cli wget
+sudo yum install -y aws-cli wget jq
 
 REGION="${region}"
 DEVICE="xvdf"
@@ -11,7 +11,6 @@ INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
 
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] finding volume to attach"
 AZ="$(wget -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone)"
-echo "$VOLUME_ID"
 VOLUME_ID="$(aws ec2 describe-volumes --filters Name=availability-zone,Values="$AZ" --volume-ids ${volume_ids} --region "$REGION" --query Volumes[*].VolumeId --output text)"
 
 count=0
@@ -31,6 +30,7 @@ done
 
 case $DISK_AVAILABILITY in
         available)
+            echo "[$(date '+%H:%M:%S %d-%m-%Y')] attaching volume: $VOLUME_ID"
             aws ec2 attach-volume --volume-id "$VOLUME_ID" --instance-id "$INSTANCE_ID" --device /dev/"$DEVICE" --region "$REGION";
          ;;
         *)
@@ -64,7 +64,7 @@ mount /dev/"$DEVICE" /ecs/prometheus_data
 
 
 
-#Create prometheus group and allow it to read and write to our volume for storing prometheus data. Note, 65534 is 
+#Create prometheus group and allow it to read and write to our volume for storing prometheus data. Note, 65534 is
 #chosen as the UID to be added to the prometheus group as this is the UID that prometheus in the docker container runs as.
 
 groupadd --system --gid 65534 prometheus
