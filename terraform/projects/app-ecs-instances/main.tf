@@ -176,7 +176,6 @@ module "ecs_instance" {
     map("Stackname", "${var.stack_name}"),
     map("Name", "${var.stack_name}-ecs-instance")
   )}"
-
 }
 
 resource "aws_ebs_volume" "prometheus_ebs_volume" {

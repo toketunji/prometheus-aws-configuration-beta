@@ -2,7 +2,7 @@
 set -eu
 
 for file in "$@"; do
-  lint=$(terraform fmt -write=false -diff=true -list=true "${file}")
+  lint=$(terraform fmt -write=true -diff=true -list=true "${file}")
   failed=""
 
   if [ ! -z "${lint}" ]; then
