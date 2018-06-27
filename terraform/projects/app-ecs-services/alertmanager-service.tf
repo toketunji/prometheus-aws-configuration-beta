@@ -72,6 +72,7 @@ data "template_file" "alertmanager_container_defn" {
     log_group     = "${aws_cloudwatch_log_group.task_logs.name}"
     region        = "${var.aws_region}"
     config_bucket = "${aws_s3_bucket.config_bucket.id}"
+    mesh_manager  = "${data.aws_instances.auto_scaling_groups.private_ips[0]}"
   }
 }
 

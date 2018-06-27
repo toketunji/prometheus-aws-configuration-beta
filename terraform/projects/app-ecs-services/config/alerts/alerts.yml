@@ -10,3 +10,14 @@ groups:
     annotations:
         summary: "Service is taking longer than 2 seconds to respond"
         description: "The service name is {{ $labels.job }}. The URL under test is {{ $labels.instance }}"
+
+- name: AlertManager-SVC
+  - alert: AlertManager_BelowThreash
+    expr: sum(up{job="alert-manager"}) by (job, instance) <= 2 and up{job="alert-manager"} == 0
+    for: 1m
+    labels:
+        severity: "P2"
+        product: "tools"
+    annotations:
+        summary: "Service is below the expected instance threshold"
+        description: "The service name is {{ $labels.job }}. The URL experiencing the issue is {{ $labels.instance }}"
