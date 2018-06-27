@@ -78,6 +78,12 @@ data "terraform_remote_state" "infra_networking" {
   }
 }
 
+data "aws_instances" "auto_scaling_groups" {
+  instance_tags {
+    Project = "app-ecs-instances"
+  }
+}
+
 data "terraform_remote_state" "infra_security_groups" {
   backend = "s3"
 

@@ -95,6 +95,9 @@ provider "template" {
 
 ## Data sources
 
+
+
+#test tags
 data "terraform_remote_state" "infra_networking" {
   backend = "s3"
 
