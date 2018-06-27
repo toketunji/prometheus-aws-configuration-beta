@@ -1,7 +1,7 @@
 #!/bin/bash
 # Attach EBS volume to instance
 echo "[$(date '+%H:%M:%S %d-%m-%Y')] installing dependencies for volume attaching"
-sudo yum install -y aws-cli wget jq watch
+sudo yum install -y aws-cli wget
 
 REGION="${region}"
 DEVICE="xvdf"
@@ -23,7 +23,7 @@ until [ "$DISK_AVAILABILITY" = available ]; do
         echo "Sleeping for some time"
         count=$((count+1));
         echo "In while loop"
-        DISK_AVAILABILITY=$(aws ec2 describe-volumes --region "$REGION" --filters Name=volume-id,Values="$VOLUME_ID" | jq -r '.Volumes[0].State')
+        DISK_AVAILABILITY=$(aws ec2 describe-volumes --region "$REGION" --filters Name=volume-id,Values="$VOLUME_ID" --query Volumes[0].State --output text)
     else
         break
     fi
