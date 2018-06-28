@@ -82,6 +82,18 @@ data "aws_instances" "auto_scaling_groups" {
   instance_tags {
     Project = "app-ecs-instances"
   }
+
+  filter {
+    name = "availability-zone"
+    values = ["eu-west-1a"]
+  }
+
+  filter {
+    name = "vpc-id"
+    values = ["${data.terraform_remote_state.infra_networking.vpc_id}"]
+  }
+
+
 }
 
 data "terraform_remote_state" "infra_security_groups" {

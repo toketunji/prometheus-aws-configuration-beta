@@ -12,9 +12,10 @@ groups:
         description: "The service name is {{ $labels.job }}. The URL under test is {{ $labels.instance }}"
 
 - name: AlertManager-SVC
+  rules:
   - alert: AlertManager_BelowThreash
     expr: sum(up{job="alert-manager"}) by (job, instance) <= 2 and up{job="alert-manager"} == 0
-    for: 1m
+    for: 10s
     labels:
         severity: "P2"
         product: "tools"
