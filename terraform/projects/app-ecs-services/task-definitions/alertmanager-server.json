@@ -9,9 +9,6 @@
       {
         "containerPort": 9093,
         "hostPort": 9093
-      },
-      {
-        "hostPort": 9094
       }
     ],
     "command": [

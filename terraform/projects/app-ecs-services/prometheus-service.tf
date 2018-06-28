@@ -118,11 +118,7 @@ resource "aws_ecs_task_definition" "prometheus_server" {
     name      = "prometheus-config"
     host_path = "/ecs/config-from-s3"
   }
-
-  volume {
-    name      = "auth-proxy"
-    host_path = "/ecs/config-from-s3/auth-proxy/conf.d"
-  }
+  
 
   # We mount this at /prometheus which is the expected location for the prom/prometheus docker image
   volume {
@@ -162,7 +158,7 @@ resource "aws_ecs_service" "prometheus_server" {
 
   load_balancer {
     target_group_arn = "${element(data.terraform_remote_state.app_ecs_albs.monitoring_external_tg, count.index)}"
-    container_name   = "auth-proxy"
+    container_name   = "prometheus"
     container_port   = 9090
   }
 

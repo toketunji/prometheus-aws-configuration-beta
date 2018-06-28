@@ -191,6 +191,26 @@ resource "aws_lb_target_group" "nginx_auth_external_endpoint" {
   }
 }
 
+resource "aws_lb_target_group" "standalone_nginx_auth_external_endpoint" {
+  name                 = "${var.stack_name}-st-${count.index + 1}"
+  port                 = 80
+  protocol             = "HTTP"
+  vpc_id               = "${data.terraform_remote_state.infra_networking.vpc_id}"
+  deregistration_delay = 30
+
+  health_check {
+    interval            = "10"
+    path                = "/health" # static health check on nginx auth proxy
+    matcher             = "200"
+    protocol            = "HTTP"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = "5"
+  }
+}
+
+
+
 resource "aws_lb_listener" "nginx_auth_external_listener_http" {
   load_balancer_arn = "${aws_lb.nginx_auth_external_alb.arn}"
   port              = "80"
@@ -373,6 +393,17 @@ resource "aws_lb_listener" "paas_proxy_internal_listener" {
   }
 }
 
+resource "aws_lb_listener" "prometheus_internal_listener" {
+  load_balancer_arn = "${aws_lb.monitoring_internal_alb.arn}"
+  port              = "9090"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.standalone_nginx_auth_external_endpoint.arn}"
+    type             = "forward"
+  }
+}
+
 resource "aws_route53_record" "alerts_private_record" {
   count = "${length(data.terraform_remote_state.infra_networking.private_subnets)}"
 
@@ -386,6 +417,22 @@ resource "aws_route53_record" "alerts_private_record" {
     evaluate_target_health = false
   }
 }
+
+
+resource "aws_route53_record" "prom_private_record" {
+  count = "${length(data.terraform_remote_state.infra_networking.private_subnets)}"
+
+  zone_id = "${data.terraform_remote_state.infra_networking.private_zone_id}"
+  name    = "prom-${count.index + 1}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_lb.monitoring_internal_alb.dns_name}"
+    zone_id                = "${aws_lb.monitoring_internal_alb.zone_id}"
+    evaluate_target_health = false
+  }
+}
+
 
 resource "aws_route53_record" "paas_proxy_private_record" {
   zone_id = "${data.terraform_remote_state.infra_networking.private_zone_id}"
@@ -446,8 +493,18 @@ output "paas_proxy_tg" {
   description = "Paas proxy target group"
 }
 
+output "st_nginx_proxy_tg" {
+  value       = "${aws_lb_target_group.standalone_nginx_auth_external_endpoint.arn}"
+  description = "Paas proxy target value"
+}
+
 output "alerts_private_record_fqdns" {
   value       = "${aws_route53_record.alerts_private_record.*.fqdn}"
+  description = "Alertmanagers private DNS FQDNs"
+}
+
+output "prom_private_record_fqdns" {
+  value       = "${aws_route53_record.prom_private_record.*.fqdn}"
   description = "Alertmanagers private DNS FQDNs"
 }
 

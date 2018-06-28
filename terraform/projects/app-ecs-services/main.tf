@@ -62,8 +62,9 @@ provider "pass" {
 
   # This pulls reng-pass from git to make sure we're using the most up to date credentials.
   # If `reng-pass git pull` fails ten terraform will fail. Git fail for various
-  # reasons so if this becomes flakey we can set this to false and update reng-pass manually.
-  refresh_store = true
+  # reasons so if this becomes flakey we can set this to false and update reng-pass manually
+  # I removed this because it just disturbs my builds.
+  refresh_store = false
 }
 
 ## Data sources
