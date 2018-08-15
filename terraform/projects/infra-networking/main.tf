@@ -36,6 +36,8 @@ variable "prometheus_subdomain" {
   default     = "monitoring"
 }
 
+
+
 # locals
 # --------------------------------------------------------------
 
@@ -107,6 +109,7 @@ resource "aws_route53_zone" "subdomain" {
 resource "aws_route53_zone" "private" {
   vpc_id = "${module.vpc.vpc_id}"
   name   = "${local.private_subdomain_name}"
+  force_destroy = true
 }
 
 ## Development resources
@@ -174,4 +177,9 @@ output "private_subnets_ips" {
 output "nat_gateway" {
   value       = "${module.vpc.nat_public_ips}"
   description = "List of nat gateway IP"
+}
+
+output "private_subdomain" {
+  value       = "${aws_route53_zone.private.name}"
+  description = "This is the subdomain for private zone"
 }
