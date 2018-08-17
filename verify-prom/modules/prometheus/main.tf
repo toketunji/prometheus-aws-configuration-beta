@@ -28,7 +28,7 @@ EOF
 }
 
 data "template_file" "prometheus_config_template" {
-  template = "${file("prometheus.conf.tpl")}"
+  template = "${file("${path.module}/prometheus.conf.tpl")}"
 }
 
 resource "aws_s3_bucket_object" "alertmanager" {
@@ -70,7 +70,7 @@ resource "aws_instance" "prometheus" {
   iam_instance_profile = "${aws_iam_instance_profile.prometheus_config_reader_profile.id}"
   private_ip           = "${var.prom_priv_ip}"
   ebs_optimized        = true
-  availability_zone    = "eu-west-1a"
+  availability_zone    = "${aws_subnet.main.availability_zone}"
   key_name             = "djeche-insecure"
 
   vpc_security_group_ids = [
@@ -87,9 +87,18 @@ resource "aws_instance" "prometheus" {
 
 resource "aws_volume_attachment" "attach-prometheus-disk" {
   device_name  = "${var.device_mount_path}"
-  volume_id    = "${var.volume_to_attach}"
+  volume_id    = "${aws_ebs_volume.promethues-disk.id}"
   instance_id  = "${aws_instance.prometheus.id}"
   skip_destroy = true
+}
+
+resource "aws_ebs_volume" "promethues-disk" {
+  availability_zone = "${aws_subnet.main.availability_zone}"
+  size              = "20"
+
+  tags {
+    Name = "promethues-disk"
+  }
 }
 
 data "template_file" "user_data_script" {

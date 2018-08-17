@@ -28,10 +28,6 @@ variable "blackbox_version" {
   default     = "0.12.0"
 }
 
-variable "volume_to_attach" {
-  description = "The volume to attach to instance"
-}
-
 variable "device_mount_path" {
   description = "The path to mount the promethus disk"
   default     = "/dev/sdh"
@@ -39,14 +35,6 @@ variable "device_mount_path" {
 
 variable "domain_name" {
   description = "Domain to serve Prometheus from and register for a TLS certificate"
-}
-
-variable "lets_encrypt_email" {
-  description = "Email to register with Let's Encrypt CA"
-}
-
-variable "real_certificate" {
-  description = "Issue a real TLS certificate (yes/no)"
 }
 
 variable "logstash_endpoint" {
