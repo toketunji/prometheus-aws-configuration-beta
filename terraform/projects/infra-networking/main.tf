@@ -36,8 +36,6 @@ variable "prometheus_subdomain" {
   default     = "monitoring"
 }
 
-
-
 # locals
 # --------------------------------------------------------------
 
@@ -107,8 +105,8 @@ resource "aws_route53_zone" "subdomain" {
 }
 
 resource "aws_route53_zone" "private" {
-  vpc_id = "${module.vpc.vpc_id}"
-  name   = "${local.private_subdomain_name}"
+  vpc_id        = "${module.vpc.vpc_id}"
+  name          = "${local.private_subdomain_name}"
   force_destroy = true
 }
 
