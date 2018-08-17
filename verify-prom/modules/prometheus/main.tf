@@ -27,6 +27,17 @@ resource "aws_iam_role" "prometheus_config_reader" {
 EOF
 }
 
+data "template_file" "prometheus_config_template" {
+  template = "${file("prometheus.conf.tpl")}"
+}
+
+resource "aws_s3_bucket_object" "alertmanager" {
+  bucket  = "${aws_s3_bucket.prometheus_config.id}"
+  key     = "prometheus/file.conf"
+  content = "${data.template_file.prometheus_config_template.rendered}"
+  etag    = "${md5(data.template_file.prometheus_config_template.rendered)}"
+}
+
 resource "aws_iam_role_policy" "prometheus_config_reader_policy" {
   name = "prometheus_config_reader_policy"
   role = "${aws_iam_role.prometheus_config_reader.id}"
@@ -42,8 +53,8 @@ resource "aws_iam_role_policy" "prometheus_config_reader_policy" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.gds_prometheus_targets.arn}/*",
-        "${aws_s3_bucket.gds_prometheus_targets.arn}"
+        "${aws_s3_bucket.prometheus_config.arn}/*",
+        "${aws_s3_bucket.prometheus_config.arn}"
       ]
     }
   ]
@@ -60,13 +71,14 @@ resource "aws_instance" "prometheus" {
   private_ip           = "${var.prom_priv_ip}"
   ebs_optimized        = true
   availability_zone    = "eu-west-1a"
+  key_name             = "djeche-insecure"
 
-vpc_security_group_ids = [
-    "${aws_security_group.ssh_from_gds.id}",
-    "${aws_security_group.http_outbound.id}",
-    "${aws_security_group.external_http_traffic.id}",
-    "${aws_security_group.logstash_outbound.id}",
-  ]
+  vpc_security_group_ids = [
+      "${aws_security_group.ssh_from_gds.id}",
+      "${aws_security_group.http_outbound.id}",
+      "${aws_security_group.external_http_traffic.id}",
+      "${aws_security_group.logstash_outbound.id}",
+    ]
 
   tags {
     Name = "Prometheus"
@@ -85,12 +97,9 @@ data "template_file" "user_data_script" {
 
   vars {
     prometheus_version = "${var.prometheus_version}"
-    domain_name        = "${var.domain_name}"
-    lets_encrypt_email = "${var.lets_encrypt_email}"
-    real_certificate   = "${var.real_certificate=="yes" ? "-v" : "--staging"}"
     logstash_endpoint  = "${var.logstash_endpoint}"
     logstash_port      = "${var.logstash_port}"
-    config_bucket      = "${aws_s3_bucket.gds_prometheus_targets.id}"
+    config_bucket      = "${aws_s3_bucket.prometheus_config.id}"
   }
 }
 
@@ -283,8 +292,8 @@ resource "aws_route53_record" "prometheus_www" {
   records = ["${aws_eip.eip_prometheus.public_ip}"]
 }
 
-resource "aws_s3_bucket" "gds_prometheus_targets" {
-  bucket = "gds-prometheus-targets-test"
+resource "aws_s3_bucket" "prometheus_config" {
+  bucket = "prometheus-targets-test"
   acl    = "private"
 
   versioning {
@@ -311,8 +320,8 @@ resource "aws_iam_user_policy" "cf_app_discovery_bucket_access" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.gds_prometheus_targets.arn}/*",
-        "${aws_s3_bucket.gds_prometheus_targets.arn}"
+        "${aws_s3_bucket.prometheus_config.arn}/*",
+        "${aws_s3_bucket.prometheus_config.arn}"
       ]
     }
   ]

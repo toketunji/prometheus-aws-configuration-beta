@@ -13,7 +13,7 @@ terraform {
 module "prometheus" {
   source = "modules/prometheus"
 
-  ami_id             = "${data.aws_ami.ubuntu.id}"
+  ami_id             = "ami-0d137679f8243e9f8"
   lets_encrypt_email = "reliability-engineering-tools-team@digital.cabinet-office.gov.uk"
   real_certificate   = "${var.real_certificate}"
   volume_to_attach   = "${aws_ebs_volume.promethues-disk.id}"
@@ -25,25 +25,9 @@ module "prometheus" {
 
 resource "aws_ebs_volume" "promethues-disk" {
   availability_zone = "eu-west-1a"
-  size              = "500"
+  size              = "20"
 
   tags {
     Name = "promethues-disk"
-  }
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  owners = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
   }
 }
