@@ -31,9 +31,9 @@ data "template_file" "prometheus_config_template" {
   template = "${file("${path.module}/prometheus.conf.tpl")}"
 }
 
-resource "aws_s3_bucket_object" "alertmanager" {
+resource "aws_s3_bucket_object" "prometheus_config" {
   bucket  = "${aws_s3_bucket.prometheus_config.id}"
-  key     = "prometheus/file.conf"
+  key     = "prometheus/prometheus.yml"
   content = "${data.template_file.prometheus_config_template.rendered}"
   etag    = "${md5(data.template_file.prometheus_config_template.rendered)}"
 }
@@ -156,30 +156,6 @@ resource "aws_security_group" "ssh_from_gds" {
   }
 }
 
-resource "aws_security_group" "http_am_from_gds_vpn_internal" {
-  vpc_id      = "${aws_vpc.main.id}"
-  name        = "Intenral access to alert manager UI"
-  description = "Allow  GDS user access to the prometheus UI, including also internal VPC access"
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 9093
-    to_port     = 9093
-    cidr_blocks = ["${var.cidr_admin_whitelist}"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 9093
-    to_port     = 9093
-    cidr_blocks = ["10.0.0.0/24"]
-  }
-
-  tags {
-    Name = "Intenral access to alert manager UI from GDS"
-  }
-}
-
 resource "aws_security_group" "http_outbound" {
   vpc_id      = "${aws_vpc.main.id}"
   name        = "HTTP outbound"
@@ -197,13 +173,6 @@ resource "aws_security_group" "http_outbound" {
     from_port   = 443
     to_port     = 443
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    protocol    = "tcp"
-    from_port   = 9093
-    to_port     = 9093
-    cidr_blocks = ["10.0.0.0/24"]
   }
 
   tags {
@@ -231,15 +200,8 @@ resource "aws_security_group" "external_http_traffic" {
 
   ingress {
     protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
+    from_port   = 9090
+    to_port     = 9090
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -302,7 +264,7 @@ resource "aws_route53_record" "prometheus_www" {
 }
 
 resource "aws_s3_bucket" "prometheus_config" {
-  bucket = "prometheus-targets-test"
+  bucket = "prometheus-config-store"
   acl    = "private"
 
   versioning {

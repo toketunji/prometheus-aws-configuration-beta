@@ -16,7 +16,6 @@ output "prom_security_groups" {
     "${aws_security_group.http_outbound.id}",
     "${aws_security_group.external_http_traffic.id}",
     "${aws_security_group.logstash_outbound.id}",
-    "${aws_security_group.http_am_from_gds_vpn_internal.id}",
   ]
 }
 
