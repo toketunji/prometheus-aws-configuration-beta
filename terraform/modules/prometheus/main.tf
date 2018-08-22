@@ -29,6 +29,10 @@ EOF
 
 data "template_file" "prometheus_config_template" {
   template = "${file("${path.module}/prometheus.conf.tpl")}"
+
+  vars {
+    prometheus_ips = "${join("\",\"", formatlist("%s:9090\",\"%s:9100", aws_instance.prometheus.*.private_ip, aws_instance.prometheus.*.private_ip))}"
+  }
 }
 
 resource "aws_s3_bucket_object" "prometheus_config" {
@@ -151,6 +155,7 @@ resource "aws_security_group" "http_outbound" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+
   tags {
     Name = "HTTP outbound"
   }
@@ -167,6 +172,28 @@ resource "aws_security_group" "external_http_traffic" {
     to_port     = 9090
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    protocol    = "tcp"
+    from_port   = 9090
+    to_port     = 9090
+    self = true
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 9100
+    to_port     = 9100
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol    = "tcp"
+    from_port   = 9100
+    to_port     = 9100
+    self = true
+  }
+
 
   tags {
     Name = "external-http-traffic"
