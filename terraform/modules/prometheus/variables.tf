@@ -33,19 +33,33 @@ variable "device_mount_path" {
   default     = "/dev/sdh"
 }
 
-variable "domain_name" {
-  description = "Domain to serve Prometheus from and register for a TLS certificate"
-}
-
-variable "logstash_endpoint" {
-  description = "Endpoint to send logs to for logstash"
-}
-
-variable "logstash_port" {
-  description = "Port of logstash endpoint"
-}
-
 variable "az_zone" {
+  type  = "list"
   description = "The availability zone in which the disk and instance reside. "
-  default = "eu-west-1a"
+  default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+}
+
+
+variable "instance_size" {
+  type = "string"
+  description = "This is the default instance size"
+  default = "t2.medium"
+}
+
+variable "vpc_identification" {
+  type = "string"
+  description = "The VPc in which the system should be deployed"
+  default = "vpc-7a17b81d"
+}
+
+variable "ssh_key_name" {
+  type = "string"
+  description = "This is the default instance EC2 access key"
+  default = "djeche-insecure"
+}
+
+
+variable "public_vpc_subnets" {
+  type = "list"
+  description = "Public VPC subnets"
 }
