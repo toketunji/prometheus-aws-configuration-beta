@@ -2,29 +2,61 @@ terraform {
   required_version = ">= 0.11.2"
 }
 
-resource "aws_iam_instance_profile" "prometheus_config_reader_profile" {
+#Instance profile
+
+
+resource "aws_iam_instance_profile" "prometheus_instance_profile" {
   name = "prometheus_config_reader_profile"
-  role = "${aws_iam_role.prometheus_config_reader.name}"
+  role = "${aws_iam_role.prometheus_role.name}"
 }
 
-resource "aws_iam_role" "prometheus_config_reader" {
-  name = "prometheus_config_reader"
+resource "aws_iam_role" "prometheus_role" {
+  name = "prometheus_profile"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+  assume_role_policy = "${data.aws_iam_policy_document.prometheus_assume_role_policy.json}"
+}
+
+data "aws_iam_policy_document" "prometheus_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
     }
-  ]
+  }
 }
-EOF
+
+
+resource "aws_iam_role_policy" "prometheus_extended_policy" {
+  name  = "Prometheus_instance_profile"
+  policy = "${data.aws_iam_policy_document.instance_role_policy.json}"
+  role = "${aws_iam_role.prometheus_role.id}"
+}
+
+##
+
+data "aws_iam_policy_document" "instance_role_policy" {
+
+  statement {
+    sid = "ec2Policy"
+    actions   = ["ec2:Describe*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "s3Bucket"
+    actions = [
+      "s3:Get*",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${aws_s3_bucket.prometheus_config.id}/*",
+      "arn:aws:s3:::${aws_s3_bucket.prometheus_config.id}",
+    ]
+
+  }
 }
 
 data "template_file" "prometheus_config_template" {
@@ -32,6 +64,7 @@ data "template_file" "prometheus_config_template" {
 
   vars {
     prometheus_ips = "${join("\",\"", formatlist("%s:9090\",\"%s:9100", aws_instance.prometheus.*.private_ip, aws_instance.prometheus.*.private_ip))}"
+    ec2_instance_profile = "${aws_iam_instance_profile.prometheus_instance_profile.name}"
   }
 }
 
@@ -42,29 +75,7 @@ resource "aws_s3_bucket_object" "prometheus_config" {
   etag    = "${md5(data.template_file.prometheus_config_template.rendered)}"
 }
 
-resource "aws_iam_role_policy" "prometheus_config_reader_policy" {
-  name = "prometheus_config_reader_policy"
-  role = "${aws_iam_role.prometheus_config_reader.id}"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetObject",
-        "s3:ListBucket"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.prometheus_config.arn}/*",
-        "${aws_s3_bucket.prometheus_config.arn}"
-      ]
-    }
-  ]
-}
-EOF
-}
 
 resource "aws_instance" "prometheus" {
   count = "${length(var.az_zone)}"
@@ -73,7 +84,7 @@ resource "aws_instance" "prometheus" {
   ami                  = "${var.ami_id}"
   instance_type        = "${var.instance_size}"
   user_data            = "${data.template_file.user_data_script.rendered}"
-  iam_instance_profile = "${aws_iam_instance_profile.prometheus_config_reader_profile.id}"
+  iam_instance_profile = "${aws_iam_instance_profile.prometheus_instance_profile.id}"
   subnet_id            = "${element(var.public_vpc_subnets, count.index)}"
   availability_zone    = "${element(var.az_zone, count.index)}"
   key_name             = "${var.ssh_key_name}"
@@ -207,32 +218,4 @@ resource "aws_s3_bucket" "prometheus_config" {
   versioning {
     enabled = true
   }
-}
-resource "aws_iam_user" "prometheus_user" {
-  name = "prometheus"
-  path = "/system/"
-}
-
-
-resource "aws_iam_user_policy" "prometheus_bucket_access" {
-  name = "prometheus"
-  user = "${aws_iam_user.prometheus_user.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.prometheus_config.arn}/*",
-        "${aws_s3_bucket.prometheus_config.arn}"
-      ]
-    }
-  ]
-}
-EOF
 }
