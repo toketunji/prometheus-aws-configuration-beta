@@ -33,10 +33,11 @@ variable "device_mount_path" {
   default     = "/dev/sdh"
 }
 
-variable "az_zone" {
-  type  = "list"
-  description = "The availability zone in which the disk and instance reside. "
-  default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+variable "availability_zones" {
+  description = "A map of availability zones to subnets"
+
+  type    = "map"
+  default = {}
 }
 
 
@@ -46,18 +47,9 @@ variable "instance_size" {
   default = "t2.medium"
 }
 
-variable "vpc_identification" {
-  type = "string"
-  description = "The VPc in which the system should be deployed"
-  default = "vpc-7a17b81d"
+variable "target_vpc" {
+  description = "The VPC in which the system will be deployed"
 }
-
-variable "ssh_key_name" {
-  type = "string"
-  description = "This is the default instance EC2 access key"
-  default = "djeche-insecure"
-}
-
 
 variable "public_vpc_subnets" {
   type = "list"
