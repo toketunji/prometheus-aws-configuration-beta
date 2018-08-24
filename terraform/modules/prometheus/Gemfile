@@ -1,0 +1,5 @@
+source "https://rubygems.org/" do
+  gem "kitchen-terraform", "4.0"
+  gem "test-kitchen", "1.23.2"
+  gem "inspec", "2.2.70"
+end

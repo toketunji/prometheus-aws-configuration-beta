@@ -6,7 +6,6 @@ terraform {
   required_version = "= 0.11.7"
 }
 
-
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -28,15 +27,14 @@ module "vpc" {
   enable_dhcp_options      = true
 }
 
-
-
 module "prometheus" {
-  source = "../terraform/modules/prometheus"
+  source = "../../../prometheus"
 
   ami_id             = "ami-0d137679f8243e9f8"
   vpc_identification = "${module.vpc.vpc_id}"
   public_vpc_subnets = "${module.vpc.public_subnets}"
   prom_priv_ip       = "${var.prometheus_private_ip}"
 }
+
 
 

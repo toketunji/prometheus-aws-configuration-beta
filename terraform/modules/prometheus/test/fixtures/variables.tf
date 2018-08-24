@@ -13,4 +13,3 @@ variable "az_zone" {
   description = "The availability zone in which the disk and instance reside. "
   default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 }
-

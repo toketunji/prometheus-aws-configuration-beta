@@ -18,3 +18,8 @@ environment.sh
 
 # os files 
 .DS_Store
+
+terraform/modules/prometheus/.kitchen/
+terraform/modules/prometheus/test/fixtures/*.tfstate*
+terraform/modules/prometheus/*.lock
+*.plan
