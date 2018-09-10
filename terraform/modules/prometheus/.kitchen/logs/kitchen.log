@@ -1,0 +1,9 @@
+I, [2018-09-10T15:38:13.925081 #32350]  INFO -- Kitchen: -----> Starting Kitchen (v1.23.2)
+W, [2018-09-10T15:38:14.125998 #32350]  WARN -- Kitchen: Running command `terraform version` in directory /root/prometheus-aws-configuration-beta/terraform/modules/prometheus
+I, [2018-09-10T15:38:14.146655 #32350]  INFO -- Kitchen: Terraform v0.11.7
+I, [2018-09-10T15:38:14.147138 #32350]  INFO -- Kitchen: 
+I, [2018-09-10T15:38:14.147178 #32350]  INFO -- Kitchen: Your version of Terraform is out of date! The latest version
+I, [2018-09-10T15:38:14.147201 #32350]  INFO -- Kitchen: is 0.11.8. You can update by downloading from www.terraform.io/downloads.html
+W, [2018-09-10T15:38:14.159236 #32350]  WARN -- Kitchen: Terraform v0.11.7 is supported
+I, [2018-09-10T15:38:15.406474 #32350]  INFO -- Kitchen: -----> Converging <prometheus-aws>...
+I, [2018-09-10T15:40:27.351792 #32350]  INFO -- Kitchen: -----> Kitchen is finished. (2m13.43s)
