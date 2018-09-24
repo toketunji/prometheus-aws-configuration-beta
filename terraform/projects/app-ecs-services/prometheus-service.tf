@@ -25,6 +25,8 @@ variable "prom_memoryReservation" {
 locals {
   num_azs = "${length(data.terraform_remote_state.app_ecs_instances.available_azs)}"
 
+  prom_count = 1 
+
   prometheus_public_fqdns = "${data.terraform_remote_state.app_ecs_albs.prom_public_record_fqdns}"
 
   active_alertmanager_private_fqdns = "${slice(data.terraform_remote_state.app_ecs_albs.alerts_private_record_fqdns, 0, local.num_azs)}"
@@ -114,7 +116,7 @@ data "template_file" "prometheus_config_file" {
 ### container, task, service definitions
 
 data "template_file" "prometheus_container_defn" {
-  count    = "${length(local.prometheus_public_fqdns)}"
+  count    = "${local.prom_num}"
   template = "${file("task-definitions/prometheus-server.json")}"
 
   vars {
@@ -128,7 +130,7 @@ data "template_file" "prometheus_container_defn" {
 }
 
 resource "aws_ecs_task_definition" "prometheus_server" {
-  count                 = "${length(local.prometheus_public_fqdns)}"
+  count                 = "${local.prom_count}"
   family                = "${var.stack_name}-prometheus-server-${count.index + 1}"
   container_definitions = "${element(data.template_file.prometheus_container_defn.*.rendered, count.index)}"
   task_role_arn         = "${aws_iam_role.prometheus_task_iam_role.arn}"
@@ -177,7 +179,7 @@ resource "aws_ecs_task_definition" "paas_proxy" {
 }
 
 resource "aws_ecs_service" "prometheus_server" {
-  count = "${length(data.terraform_remote_state.app_ecs_instances.available_azs)}"
+  count = "${local.prom_count}"
 
   name            = "${var.stack_name}-prometheus-server-${count.index + 1}"
   cluster         = "${var.stack_name}-ecs-monitoring"
