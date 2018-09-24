@@ -235,6 +235,40 @@ resource "aws_ebs_volume" "prometheus_ebs_volume" {
   )}"
 }
 
+## Test prometheus module
+
+module "prometheus" {
+  source = "../../modules/enclave/prometheus"
+
+  # Canonicals Ubunutu 18.04 Bionic Beaver in eu-west-1
+  ami_id = "ami-0ee06eb8d6eebcde0"
+
+  # Staging
+  target_vpc = "${data.terraform_remote_state.infra_networking.vpc_id}"
+  enable_ssh = true
+
+  product        = "testing_something"
+  environment    = "ec2-env"
+  config_bucket  = "putconfhere"
+  targets_bucket = "gds-prometheus-targets-staging"
+
+  subnet_ids          = "${data.terraform_remote_state.network.public_subnets}"
+  availability_zones  = "${data.terraform_remote_state.network.subnets_by_az}"
+  vpc_security_groups = ["${data.terraform_remote_state.sg.monitoring_external_sg_id}"]
+  region              = "eu-west-1"
+}
+
+module "paas-config" {
+  source = "../../../../modules/enclave/paas-config"
+
+  environment              = "${local.testing_something"
+  prometheus_dns_names     = "${join("\",\"", formatlist("%s:9090", module.prometheus.prometheus_private_dns))}"
+  prometheus_dns_nodes     = "${join("\",\"", formatlist("%s:9100", module.prometheus.prometheus_private_dns))}"
+  prometheus_config_bucket = "putconfhere"
+  alertmanager_dns_names   = "${join("\",\"", local.active_alertmanager_private_fqdns)}"
+  alerts_path              = "../app-ecs-services/config/alerts/"
+}
+
 ## Outputs
 
 output "available_azs" {
@@ -246,3 +280,11 @@ output "asg_dev_scaledown_schedules" {
   value       = "${aws_autoscaling_schedule.asg_dev_scaledown_schedules.*.recurrence}"
   description = "Cron schedule for scaling down dev EC2 instances"
 }
+
+output "prometheus_instance_id" {
+  value = "${module.prometheus.prometheus_instance_id}"
+}
+
+output "ec2_instance_priv_dns" {
+   value = "${module.prometheus.prometheus_private_dns}"
+} 

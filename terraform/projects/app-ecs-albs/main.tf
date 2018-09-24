@@ -83,6 +83,18 @@ data "terraform_remote_state" "infra_security_groups" {
   }
 }
 
+
+data "terraform_remote_state" "infra_ecs_insatnces" {
+  backend = "s3"
+
+  config {
+    bucket = "${var.remote_state_bucket}"
+    key    = "app-ecs-instances.tfstate"
+    region = "${var.aws_region}"
+  }
+}
+
+
 ## Resources
 
 resource "aws_lb" "nginx_auth_external_alb" {
@@ -373,6 +385,13 @@ resource "aws_route53_record" "paas_proxy_private_record" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_lb_target_group_attachment" "ec2_instance_attachment" {
+  target_group_arn = "${aws_lb_target_group.prometheus_internal_endpoint.arn}"
+  target_id        = "${data.terraform_remote_state.infra_ecs_insatnces.prometheus_instance_id}"
+  port             = 9090
+}
+
 
 ## Outputs
 
