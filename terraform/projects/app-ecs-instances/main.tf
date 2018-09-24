@@ -252,20 +252,20 @@ module "prometheus" {
   config_bucket  = "putconfhere"
   targets_bucket = "gds-prometheus-targets-staging"
 
-  subnet_ids          = "${data.terraform_remote_state.network.public_subnets}"
-  availability_zones  = "${data.terraform_remote_state.network.subnets_by_az}"
-  vpc_security_groups = ["${data.terraform_remote_state.sg.monitoring_external_sg_id}"]
+  subnet_ids          = ["${data.terraform_remote_state.infra_networking.private_subnets[2]}"]
+  availability_zones  = {"eu-west-1c" = "eu-west-1c"}
+  vpc_security_groups = ["${data.terraform_remote_state.infra_security_groups.monitoring_external_sg_id}"]
   region              = "eu-west-1"
 }
 
 module "paas-config" {
-  source = "../../../../modules/enclave/paas-config"
+  source = "../../modules/enclave/paas-config"
 
-  environment              = "${local.testing_something"
+  environment              = "testing_something"
   prometheus_dns_names     = "${join("\",\"", formatlist("%s:9090", module.prometheus.prometheus_private_dns))}"
   prometheus_dns_nodes     = "${join("\",\"", formatlist("%s:9100", module.prometheus.prometheus_private_dns))}"
-  prometheus_config_bucket = "putconfhere"
-  alertmanager_dns_names   = "${join("\",\"", local.active_alertmanager_private_fqdns)}"
+  prometheus_config_bucket = "${module.prometheus.s3_config_bucket}"
+  alertmanager_dns_names   = "1.1.1.1"
   alerts_path              = "../app-ecs-services/config/alerts/"
 }
 
@@ -287,4 +287,4 @@ output "prometheus_instance_id" {
 
 output "ec2_instance_priv_dns" {
    value = "${module.prometheus.prometheus_private_dns}"
-} 
+}

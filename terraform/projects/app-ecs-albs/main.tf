@@ -84,7 +84,7 @@ data "terraform_remote_state" "infra_security_groups" {
 }
 
 
-data "terraform_remote_state" "infra_ecs_insatnces" {
+data "terraform_remote_state" "infra_ecs_instances" {
   backend = "s3"
 
   config {
@@ -387,8 +387,8 @@ resource "aws_route53_record" "paas_proxy_private_record" {
 }
 
 resource "aws_lb_target_group_attachment" "ec2_instance_attachment" {
-  target_group_arn = "${aws_lb_target_group.prometheus_internal_endpoint.arn}"
-  target_id        = "${data.terraform_remote_state.infra_ecs_insatnces.prometheus_instance_id}"
+  target_group_arn = "${aws_lb_target_group.prometheus_internal_endpoint.2.arn}"
+  target_id        = "${data.terraform_remote_state.infra_ecs_instances.prometheus_instance_id.0}"
   port             = 9090
 }
 
