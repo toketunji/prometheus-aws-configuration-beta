@@ -25,7 +25,9 @@ variable "prom_memoryReservation" {
 locals {
   num_azs = "${length(data.terraform_remote_state.app_ecs_instances.available_azs)}"
 
-  prom_count = 1 
+  # We reduce number of prometheis down to 2 as part of the transition from Prometheus running on
+  # ECS to EC2. After transition is done, this whole ECS service will be deleted.
+  prom_count = 2
 
   prometheus_public_fqdns = "${data.terraform_remote_state.app_ecs_albs.prom_public_record_fqdns}"
 
@@ -116,7 +118,7 @@ data "template_file" "prometheus_config_file" {
 ### container, task, service definitions
 
 data "template_file" "prometheus_container_defn" {
-  count    = "${local.prom_num}"
+  count    = "${local.prom_count}"
   template = "${file("task-definitions/prometheus-server.json")}"
 
   vars {
