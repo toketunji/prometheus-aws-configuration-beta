@@ -153,5 +153,17 @@ resource "aws_s3_bucket" "config_bucket" {
   }
 }
 
+module "paas-config" {
+  source = "../../modules/enclave/paas-config"
+
+  environment              = "dm-test-stack"
+  prometheus_dns_names     = "${join("\",\"", formatlist("%s:9090", concat(${local.active_prometheus_private_fqdns}, ${
+data.terraform_remote_state.app_ecs_instances.ec2_instance_priv_dns})))}"
+  prometheus_dns_nodes     = "${join("\",\"", formatlist("%s:9100", concat(${local.active_prometheus_private_fqdns}, ${data.terraform_remote_state.app_ecs_instances.ec2_instance_priv_dns})))}"
+  prometheus_config_bucket = "${data.terraform_remote_state.app_ecs_instances.s3_config_bucket}"
+  alertmanager_dns_names   = "${join("\",\"", local.active_alertmanager_private_fqdns)}"
+  alerts_path              = "../app-ecs-services/config/alerts/"
+}
+
 ## Outputs
 
