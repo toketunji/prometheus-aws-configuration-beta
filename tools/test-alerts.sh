@@ -11,5 +11,5 @@ ALERTS_DIR=($(find $ALERTS_PATH -name test-$TEAM-alerts.yml -not -name 'test-tem
 
 # run promtool test against each alerts test file found
 for ALERTS_TEST in "${ALERTS_DIR[@]}"; do
-    promtool test rules $ALERTS_TEST
+    ./tools/promtool test rules $ALERTS_TEST
 done
