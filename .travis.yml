@@ -18,7 +18,7 @@ install:
 script:
   - find . -name '*.tf' | xargs tools/terraform-format.sh
   - tools/check-alerting-rules.sh
-  - promtool --version
+  - tools/promtool --version
   - tools/test-alerts.sh
 notifications:
   email: false
