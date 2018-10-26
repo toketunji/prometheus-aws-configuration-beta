@@ -124,3 +124,11 @@ resource "aws_s3_bucket" "prometheus_config" {
     enabled = true
   }
 }
+
+data "template_file" "filebeat_conf" {
+  template = "${file("filebeat.yml.tpl")}"
+
+  vars {
+    logstash_hosts = "example-host:80"
+  }
+}
