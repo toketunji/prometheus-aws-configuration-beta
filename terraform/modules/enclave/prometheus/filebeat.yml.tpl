@@ -5,6 +5,6 @@ filebeat.inputs:
     - /var/log/syslog
 
 output.logstash:
-  hosts: ["${logstash_host}"]
+  hosts: ["${logstash_hosts}"]
   loadbalance: true
   ssl.enabled: true
